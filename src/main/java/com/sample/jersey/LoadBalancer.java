@@ -24,7 +24,7 @@ public class LoadBalancer {
 	public static void main(String[] args) throws Exception {
 		LoadBalancer balancer = new LoadBalancer();
 		balancer.roundRobin();// for round robin 
-//		balancer.stickeySession(); // for stickey session
+		// balancer.stickeySession(); // for stickey session
 		balancer.startBalancer(ServletContainer.class);
 	}
 
@@ -37,22 +37,22 @@ public class LoadBalancer {
 	}
 
 	protected void startBalancer(Class<? extends HttpServlet> servletClass) throws Exception {
-		server1 = startServer(new ServletHolder(servletClass), "node1", 8081);
+		server1 = createServer(new ServletHolder(servletClass), "node1", 8081);
 		server1.start();
 
-		server2 = startServer(new ServletHolder(servletClass), "node2", 8091);
+		server2 = createServer(new ServletHolder(servletClass), "node2", 8091);
 		server2.start();
 		ServletHolder holder = new ServletHolder(BalancerServlet.class);
 		holder.setInitParameter("stickySessions", String.valueOf(stickeySession));
 		holder.setInitParameter("proxyPassReverse", "true");
 		holder.setInitParameter("balancerMember." + "node1" + ".proxyTo", "http://localhost:" + 8081);
 		holder.setInitParameter("balancerMember." + "node2" + ".proxyTo", "http://localhost:" + 8091);
-		balancer = startServer(holder, null, 8071);
+		balancer = createServer(holder, null, 8071);
 		balancer.start();
 		System.out.println(balancer.getURI());
 	}
 
-	private Server startServer(ServletHolder servletHolder, String node, int port) {
+	private Server createServer(ServletHolder servletHolder, String node, int port) {
 		InetSocketAddress address = new InetSocketAddress("localhost", port);
 		Server server = new Server(address);
 		ServerConnector connector = new ServerConnector(server);
